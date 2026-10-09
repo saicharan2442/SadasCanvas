@@ -228,43 +228,46 @@ export async function openWithPicker(): Promise<
 
 // ── Image export ─────────────────────────────────────────────────────────────
 
-export function exportImage(
+export function getStageDataUrl(
   format: "png" | "jpg",
-  docName: string,
   sheet?: { w: number; h: number } | null,
-) {
+): string {
   const stage = stageBus.stage;
   if (!stage) throw new Error("Canvas not ready.");
 
-  // `cpExport` tells the background layer to omit the board colour and grid
-  // so exports contain only the paper and the artwork.
   const bg = stage.getLayers()[0];
   stage.setAttr("cpExport", true);
   bg?.draw();
   try {
-    // A sized sheet exports exactly the sheet area at its true pixel size.
     if (sheet && sheet.w > 0 && sheet.h > 0) {
       const scale = stage.scaleX() || 1;
-      const dataUrl = stage.toDataURL({
+      return stage.toDataURL({
         x: stage.x(), y: stage.y(),
         width: sheet.w * scale, height: sheet.h * scale,
         pixelRatio: 2 / scale,
         mimeType: format === "jpg" ? "image/jpeg" : "image/png",
       });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = safeFileName(docName) + "." + format;
-      a.click();
-      return;
     }
-    exportContentArea(stage, format, docName);
+    return getExportContentAreaDataUrl(stage, format);
   } finally {
     stage.setAttr("cpExport", false);
     bg?.draw();
   }
 }
 
-function exportContentArea(stage: Konva.Stage, format: "png" | "jpg", docName: string) {
+export function exportImage(
+  format: "png" | "jpg",
+  docName: string,
+  sheet?: { w: number; h: number } | null,
+) {
+  const dataUrl = getStageDataUrl(format, sheet);
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = safeFileName(docName) + "." + format;
+  a.click();
+}
+
+function getExportContentAreaDataUrl(stage: Konva.Stage, format: "png" | "jpg"): string {
   const layer = stage.getLayers()[1];
   // union of all object client rects, excluding the invisible hit board
   let rect: { x: number; y: number; width: number; height: number } | null = null;
@@ -284,12 +287,16 @@ function exportContentArea(stage: Konva.Stage, format: "png" | "jpg", docName: s
     rect = { x: 0, y: 0, width: stage.width(), height: stage.height() };
   }
   const pad = 24;
-  const dataUrl = stage.toDataURL({
+  return stage.toDataURL({
     x: rect.x - pad, y: rect.y - pad,
     width: rect.width + pad * 2, height: rect.height + pad * 2,
     pixelRatio: 2,
     mimeType: format === "jpg" ? "image/jpeg" : "image/png",
   });
+}
+
+function exportContentArea(stage: Konva.Stage, format: "png" | "jpg", docName: string) {
+  const dataUrl = getExportContentAreaDataUrl(stage, format);
   const a = document.createElement("a");
   a.href = dataUrl;
   a.download = safeFileName(docName) + "." + format;

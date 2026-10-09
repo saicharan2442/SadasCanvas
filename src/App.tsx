@@ -19,6 +19,7 @@ import {
   AboutDialog, SettingsDialog, RowsDialog, RecoveryBanner,
   LinkDialog, LinkConfirmDialog, BgRemoveDialog,
 } from "./ui/Dialogs";
+import ContextMenu from "./ui/ContextMenu";
 import CanvasStage from "./editor/CanvasStage";
 import { useHotkeys } from "./hooks/useHotkeys";
 import { useStore, activeDoc, activePage, getClipboard } from "./core/store";
@@ -116,7 +117,6 @@ export default function App() {
     const onPaste = async (e: ClipboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest?.("input, textarea, select, [contenteditable]")) return;
-      if (getClipboard().length > 0) return; // internal object clipboard owns Ctrl+V
       const cd = e.clipboardData;
       if (!cd) return;
 
@@ -126,7 +126,10 @@ export default function App() {
 
       if (!handled) {
         const text = cd.getData("text/plain");
-        if (text && text.trim().length > 0) {
+        if (text === "__SADAS_CANVAS_OBJECTS__" || (!text && getClipboard().length > 0)) {
+          useStore.getState().pasteClipboard();
+          handled = true;
+        } else if (text && text.trim().length > 0) {
           const st = useStore.getState();
           const page = activePage(activeDoc(st));
           if (page) {
@@ -217,6 +220,7 @@ export default function App() {
       <LinkConfirmDialog />
       {presenting && <PresentMode />}
       {toast && toastVisible && <div className="toast">{toast}</div>}
+      <ContextMenu />
     </div>
   );
 }

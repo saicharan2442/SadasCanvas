@@ -17,7 +17,7 @@ const MENUS: { label: string; items: MenuEntry[] }[] = [
   {
     label: "File",
     items: [A("file.new"), A("file.open"), SEP, A("file.save"), A("file.saveAs"), SEP,
-      A("file.exportPng"), A("file.exportJpg"), A("file.exportAll"), SEP, A("file.closeTab")],
+      A("file.exportPng"), A("file.exportJpg"), A("file.exportPdf"), SEP, A("file.closeTab")],
   },
   {
     label: "Edit",

@@ -8,7 +8,7 @@ import {
 } from "../core/store";
 import {
   openDocumentFile, exportImage, sanitizeSvg, pushBackup,
-  saveDocument, saveDocumentAs, openWithPicker, canUseFilePicker, DOC_EXT_RE,
+  saveDocument, saveDocumentAs, openWithPicker, canUseFilePicker, DOC_EXT_RE, getStageDataUrl
 } from "../core/fileio";
 import { makeObject, uid } from "../core/factory";
 import { cmdObjects } from "../core/commands";
@@ -27,6 +27,7 @@ export interface AppAction {
   chord?: string;    // key combo, e.g. "ctrl+shift+g"
   enabled?: () => boolean;
   checked?: () => boolean;
+  visible?: () => boolean;
   run: () => void;
 }
 
@@ -402,6 +403,56 @@ function fitToContent(boundsOnlySelection = false) {
   centerOn(b, { pad: 64 });
 }
 
+async function exportAllSheetsPdf() {
+  const doc = curDoc();
+  if (!doc) return;
+  const store = st();
+  const origPage = store.activeDocId ? store.activePageId : null;
+  const origHidden = store.chromeHidden;
+
+  store.setFlag("chromeHidden", true);
+  try {
+    const { jsPDF } = await import("jspdf");
+    let pdf: any = null;
+
+    for (let i = 0; i < doc.pages.length; i++) {
+      const page = doc.pages[i];
+      store.setActivePage(page.id);
+      
+      // wait for react-konva to render the newly active page
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const sheetSizeDef = isInfinite(page.sheet) ? null : sheetSize(page.sheet);
+      const dataUrl = getStageDataUrl("png", sheetSizeDef);
+      
+      // Create an image object to know actual width/height
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((res) => { img.onload = res; img.onerror = res; });
+      
+      const format = [img.width, img.height];
+      const orientation = img.width > img.height ? "landscape" : "portrait";
+
+      if (!pdf) {
+        pdf = new jsPDF({ orientation, unit: "px", format });
+      } else {
+        pdf.addPage(format, orientation);
+      }
+
+      pdf.addImage(dataUrl, "PNG", 0, 0, img.width, img.height);
+    }
+
+    if (pdf) pdf.save((doc.name || "Untitled") + ".pdf");
+  } catch (err: any) {
+    store.showToast(err?.message ?? "PDF Export failed");
+  } finally {
+    if (origPage) store.setActivePage(origPage);
+    store.setFlag("chromeHidden", origHidden);
+    requestAnimationFrame(fitSheet);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ACTIONS: AppAction[] = [
@@ -420,8 +471,8 @@ export const ACTIONS: AppAction[] = [
     run: () => exportSheetImage("png") },
   { id: "file.exportJpg", label: "Export Sheet as JPG…", category: "File",
     run: () => exportSheetImage("jpg") },
-  { id: "file.exportAll", label: "Export All Content as PNG…", category: "File",
-    run: () => { const d = curDoc(); if (d) try { exportImage("png", d.name); } catch (e: any) { st().showToast(e.message); } } },
+  { id: "file.exportPdf", label: "Export All Sheets as PDF…", category: "File",
+    run: () => void exportAllSheetsPdf() },
 
   // Sheet ────────────────────────────────────────────────────────────────
   { id: "sheet.add", label: "Add Sheet", category: "Sheet", shortcut: "Ctrl+Enter", chord: "ctrl+enter",
@@ -478,7 +529,7 @@ export const ACTIONS: AppAction[] = [
     enabled: hasSelection, run: () => st().copySelection(true) },
   { id: "edit.copy", label: "Copy", category: "Edit", shortcut: "Ctrl+C", chord: "ctrl+c",
     enabled: hasSelection, run: () => st().copySelection(false) },
-  { id: "edit.paste", label: "Paste", category: "Edit", shortcut: "Ctrl+V", chord: "ctrl+v",
+  { id: "edit.paste", label: "Paste", category: "Edit", shortcut: "Ctrl+V",
     run: () => st().pasteClipboard() },
   { id: "edit.duplicate", label: "Duplicate", category: "Edit", shortcut: "Ctrl+D", chord: "ctrl+d",
     enabled: hasSelection, run: () => st().duplicateSelection() },
@@ -490,6 +541,41 @@ export const ACTIONS: AppAction[] = [
     run: () => st().selectAll() },
   { id: "edit.deselect", label: "Deselect", category: "Edit", shortcut: "Esc", chord: "escape",
     enabled: hasSelection, run: () => st().clearSelection() },
+  { id: "edit.setAsBackground", label: "Set image as background", category: "Edit",
+    visible: () => {
+      const page = curPage();
+      const selIds = sel();
+      if (!page || selIds.length !== 1) return false;
+      const obj = page.objects.find((o) => o.id === selIds[0]);
+      return obj?.type === "image" && !isInfinite(page.sheet);
+    },
+    run: () => {
+      const page = curPage();
+      const doc = curDoc();
+      if (!page || !doc) return;
+      const selIds = sel();
+      const obj = page.objects.find((o) => o.id === selIds[0]);
+      if (!obj || obj.type !== "image") return;
+      
+      const { w, h } = sheetSize(page.sheet);
+      if (w === 0 || h === 0) return;
+      
+      const scaleX = w / obj.width;
+      const scaleY = h / obj.height;
+      const scale = Math.max(scaleX, scaleY);
+      
+      const newW = obj.width * scale;
+      const newH = obj.height * scale;
+      const newX = (w - newW) / 2;
+      const newY = (h - newH) / 2;
+      
+      const newObjects = page.objects.filter((o) => o.id !== obj.id);
+      newObjects.unshift({ ...obj, x: newX, y: newY, width: newW, height: newH, locked: true });
+      
+      st().dispatch(cmdObjects(doc.id, page.id, page.objects, newObjects, "Set as background"));
+      st().clearSelection();
+    }
+  },
 
   // View ─────────────────────────────────────────────────────────────────
   { id: "view.zoomIn", label: "Zoom In", category: "View", shortcut: "Ctrl++", chord: "ctrl+=",

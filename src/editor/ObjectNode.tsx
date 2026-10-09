@@ -292,23 +292,25 @@ function ObjectNodeInner(props: Props) {
 
   switch (o.type) {
     case "text":
+      const fontStack = `${o.fontFamily}, "Segoe UI", "Nirmala UI", "Gautami", "Roboto", "Helvetica Neue", "Arial", sans-serif`;
       return editing || !currentText ? (
         <Rect {...common} width={currentW} height={Math.max(currentH, o.fontSize * o.lineHeight)} listening={false}
           stroke={preview ? "#8b3dff" : undefined} strokeWidth={preview ? 1 : undefined} dash={preview ? [6, 4] : undefined} strokeScaleEnabled={false} />
       ) : (
-        <Text {...common} width={currentW} text={currentText} fontFamily={o.fontFamily} fontSize={o.fontSize} fontStyle={fontStyleOf(o)}
+        <Text {...common} width={currentW} text={currentText} fontFamily={fontStack} fontSize={o.fontSize} fontStyle={fontStyleOf(o)}
           textDecoration={decorationOf(o)} fill={o.color} align={o.align} lineHeight={o.lineHeight} letterSpacing={currentLetterSpacing} wrap="word"
           {...textStrokeProps} {...shadowOf(o)} />
       );
     case "sticky": {
       const w = currentW, h = currentH;
       const proxy = { ...o, width: w, height: h };
+      const fontStack = `${o.fontFamily}, "Segoe UI", "Nirmala UI", "Gautami", "Roboto", "Helvetica Neue", "Arial", sans-serif`;
       return (
         <Group {...common} width={w} height={h}>
           <Group {...flip}><Rect width={w} height={h} cornerRadius={3} {...fillOf(proxy)} {...shadowOf(proxy)} /></Group>
           {!editing && (
             <Text x={STICKY_PAD} y={STICKY_PAD - 2} width={Math.max(1, w - STICKY_PAD * 2)} height={Math.max(1, h - STICKY_PAD * 2)}
-              text={currentText} fontFamily={o.fontFamily} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} textDecoration={decorationOf(o)}
+              text={currentText} fontFamily={fontStack} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} textDecoration={decorationOf(o)}
               fill={o.color} align={o.align} lineHeight={o.lineHeight} letterSpacing={currentLetterSpacing} wrap="word" listening={false}
               {...textStrokeProps} />
           )}
@@ -321,6 +323,7 @@ function ObjectNodeInner(props: Props) {
     case "star": {
       const w = currentW, h = currentH;
       const proxy = { ...o, width: w, height: h };
+      const fontStack = `${o.fontFamily}, "Segoe UI", "Nirmala UI", "Gautami", "Roboto", "Helvetica Neue", "Arial", sans-serif`;
       return (
         <Group {...common} width={w} height={h}>
           <Group {...flip}>
@@ -331,7 +334,7 @@ function ObjectNodeInner(props: Props) {
           </Group>
           {!editing && o.text !== "" && (
             <Text x={SHAPE_PAD} y={0} width={Math.max(1, w - SHAPE_PAD * 2)} height={h} verticalAlign="middle"
-              text={o.text} fontFamily={o.fontFamily} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} textDecoration={decorationOf(o)}
+              text={o.text} fontFamily={fontStack} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} textDecoration={decorationOf(o)}
               fill={o.color} align={o.align} lineHeight={o.lineHeight} letterSpacing={currentLetterSpacing} wrap="word" listening={false}
               {...textStrokeProps} />
           )}
@@ -348,17 +351,18 @@ function ObjectNodeInner(props: Props) {
       const w = currentW, h = currentH;
       const pad = 14; const accentW = 4;
       const proxy = { ...o, width: w, height: h };
+      const fontStack = `${o.fontFamily}, "Segoe UI", "Nirmala UI", "Gautami", "Roboto", "Helvetica Neue", "Arial", sans-serif`;
       return (
         <Group {...common} width={w} height={h}>
           <Rect width={w} height={h} cornerRadius={o.cornerRadius} {...fillOf(proxy)} {...strokeProps} {...shadowOf(proxy)} />
           <Rect width={accentW} height={h} cornerRadius={[o.cornerRadius, 0, 0, o.cornerRadius]} fill="#8b3dff" listening={false} />
           {!editing && (
             <Text x={pad + accentW} y={pad - 2} width={Math.max(10, w - pad * 2 - accentW)} text={currentText || "Link"}
-              fontFamily={o.fontFamily} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} fill={o.color} lineHeight={1.25} wrap="word" ellipsis listening={false} height={o.fontSize * 2.6}
+              fontFamily={fontStack} fontSize={o.fontSize} fontStyle={fontStyleOf(o)} fill={o.color} lineHeight={1.25} wrap="word" ellipsis listening={false} height={o.fontSize * 2.6}
               {...textStrokeProps} />
           )}
           <Text x={pad + accentW} y={h - pad - 13} width={Math.max(10, w - pad * 2 - accentW)} text={o.link ? "🔗 " + prettyUrl(o.link) : "No URL set"}
-            fontFamily={o.fontFamily} fontSize={11.5} fill={o.link ? "#8b3dff" : "#9aa3b2"} wrap="none" ellipsis listening={false} />
+            fontFamily={fontStack} fontSize={11.5} fill={o.link ? "#8b3dff" : "#9aa3b2"} wrap="none" ellipsis listening={false} />
         </Group>
       );
     }

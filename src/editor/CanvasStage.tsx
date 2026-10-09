@@ -897,7 +897,10 @@ export default function CanvasStage() {
       onDragOver={(e) => { e.preventDefault(); setDragHint(true); }}
       onDragLeave={() => setDragHint(false)}
       onDrop={onDrop}
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        useStore.getState().setContextMenu({ x: e.clientX, y: e.clientY });
+      }}
     >
       <Stage
         ref={stageRef}
@@ -1077,7 +1080,7 @@ function CanvasTextEditor({ obj, cameraX, cameraY, zoom }: {
     top: cameraY + (obj.y + pad) * zoom,
     width: Math.max(40, (obj.width - pad * 2) * zoom),
     fontSize: fontPx,
-    fontFamily: obj.fontFamily,
+    fontFamily: `${obj.fontFamily}, "Segoe UI", "Nirmala UI", "Gautami", "Roboto", "Helvetica Neue", "Arial", sans-serif`,
     fontStyle: obj.italic ? "italic" : "normal",
     fontWeight: obj.bold ? 700 : 400,
     textDecoration: decorationOf(obj),

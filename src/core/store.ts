@@ -98,6 +98,10 @@ interface AppState {
   toastTs: number;
   /** Browser connectivity. Sadas Canvas works identically either way. */
   online: boolean;
+
+  contextMenu: { x: number; y: number } | null;
+  setContextMenu: (menu: { x: number; y: number } | null) => void;
+
   /** Full-screen slideshow mode. */
   presenting: boolean;
   playing: boolean;
@@ -262,6 +266,10 @@ export const useStore = create<AppState>()((set, get) => {
     toast: null,
     toastTs: 0,
     online: typeof navigator !== "undefined" ? navigator.onLine !== false : true,
+
+    contextMenu: null,
+    setContextMenu: (menu) => set({ contextMenu: menu }),
+
     presenting: false,
     playing: false,
     playbackTime: 0,
@@ -429,6 +437,9 @@ export const useStore = create<AppState>()((set, get) => {
       if (!page || selection.length === 0) return;
       const objs = page.objects.filter((o) => selection.includes(o.id));
       setClipboard(objs.map((o) => ({ ...o, points: o.points ? [...o.points] : undefined })));
+      
+      try { navigator.clipboard?.writeText("__SADAS_CANVAS_OBJECTS__").catch(() => {}); } catch {}
+
       if (cut) get().removeObjects(selection, "Cut");
       else get().showToast(`${objs.length} object${objs.length > 1 ? "s" : ""} copied`);
     },

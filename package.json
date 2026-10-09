@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "clsx": "2.1.1",
+    "jspdf": "^4.2.1",
+    "jszip": "^3.10.2",
     "konva": "^10.7.0",
     "lucide-react": "^1.49.0",
     "react": "19.2.6",

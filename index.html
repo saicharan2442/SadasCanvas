@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sadas Canvas</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cdefs%3E%3ClinearGradient id='lg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23af7aff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b3dff;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='128' height='128' rx='30' fill='url(%23lg)'/%3E%3Cpath d='M35 85 C 35 95, 55 100, 64 100 C 85 100, 93 85, 93 75 C 93 55, 35 55, 35 35 C 35 25, 45 15, 64 15 C 80 15, 93 25, 93 35' stroke='white' stroke-width='14' fill='none' stroke-linecap='round' opacity='0.3'/%3E%3Cpath d='M40 80 C 40 90, 55 95, 64 95 C 85 95, 88 80, 88 72 C 88 55, 40 55, 40 38 C 40 28, 48 20, 64 20 C 78 20, 88 28, 88 38' stroke='white' stroke-width='14' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='92' cy='36' r='10' fill='%2300c4cc'/%3E%3C/svg%3E" />
+    <script>
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem("cp:theme") || "dark";
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    </script>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; background: #16181c; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
